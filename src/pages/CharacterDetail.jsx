@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import ComicCard from "../components/ComicCard";
-
-const API_URL = "http://localhost:3000";
+import API_URL from "../config";
 
 function CharacterDetail() {
     const { id } = useParams();

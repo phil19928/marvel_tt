@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import CharacterCard from "../components/CharacterCard";
-
-const API_URL = "http://localhost:3000";
+import API_URL from "../config";
 
 function Characters() {
     const [characters, setCharacters] = useState([]);
