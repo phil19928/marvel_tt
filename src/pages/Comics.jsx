@@ -2,79 +2,99 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import ComicCard from "../components/ComicCard";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+const API_URL = "http://localhost:3000";
 
-const Comics = () => {
+function Comics() {
     const [comics, setComics] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [page, setPage] = useState(1);
-    const [searchTitle, setSearchTitle] = useState("");
-    const [searchInput, setSearchInput] = useState("");
-    const [totalCount, setTotalCount] = useState(0);
-    const [favorites, setFavorites] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchText, setSearchText] = useState("");
+    const [submittedSearch, setSubmittedSearch] = useState("");
+    const [totalComics, setTotalComics] = useState(0);
+    const [favoritesList, setFavoritesList] = useState([]);
 
-    const ITEMS_PER_PAGE = 100;
-
-    // Charger les favoris comics
     useEffect(() => {
-        const storedFavorites = localStorage.getItem("favorites");
-        if (storedFavorites) {
-            const parsed = JSON.parse(storedFavorites);
-            setFavorites(parsed.favoriteComics || []);
+        const savedData = localStorage.getItem("favorites");
+        if (savedData) {
+            const parsed = JSON.parse(savedData);
+            setFavoritesList(parsed.favoriteComics || []);
         }
     }, []);
 
-    // Fetch des comics
     useEffect(() => {
-        const fetchComics = async () => {
-            setLoading(true);
-            setError(null);
+        async function loadComics() {
+            setIsLoading(true);
+            setErrorMessage("");
 
             try {
-                let url = `${API_BASE_URL}/api/comics?page=${page}`;
-                if (searchTitle) {
-                    url += `&title=${encodeURIComponent(searchTitle)}`;
+                let url = API_URL + "/api/comics?page=" + currentPage;
+                if (submittedSearch !== "") {
+                    url = url + "&title=" + submittedSearch;
                 }
 
                 const response = await axios.get(url);
-                // Tri alphabétique côté front sur la page courante
-                const sortedComics = (response.data.results || []).sort((a, b) =>
-                    (a.title || "").localeCompare(b.title || "")
-                );
+                const comicsData = response.data.results || [];
+
+                const sortedComics = comicsData.sort(function (a, b) {
+                    const titleA = a.title || "";
+                    const titleB = b.title || "";
+                    return titleA.localeCompare(titleB);
+                });
+
                 setComics(sortedComics);
-                setTotalCount(response.data.count || 0);
-            } catch (err) {
-                console.error("Erreur fetch comics:", err);
-                setError("Impossible de charger les comics. Vérifiez que le backend est lancé.");
-            } finally {
-                setLoading(false);
+                setTotalComics(response.data.count || 0);
+            } catch (error) {
+                console.error(error);
+                setErrorMessage("Erreur lors du chargement des comics.");
             }
-        };
 
-        fetchComics();
-    }, [page, searchTitle]);
+            setIsLoading(false);
+        }
 
-    // Gestion de la recherche
-    const handleSearch = (e) => {
-        e.preventDefault();
-        setSearchTitle(searchInput);
-        setPage(1);
-    };
+        loadComics();
+    }, [currentPage, submittedSearch]);
 
-    // Toggle favori
-    const toggleFavorite = (comic) => {
-        const storedFavorites = localStorage.getItem("favorites");
-        const currentFavorites = storedFavorites
-            ? JSON.parse(storedFavorites)
-            : { favoriteCharacters: [], favoriteComics: [] };
+    function handleSearchSubmit(event) {
+        event.preventDefault();
+        setSubmittedSearch(searchText);
+        setCurrentPage(1);
+    }
 
-        const existingIndex = currentFavorites.favoriteComics.findIndex(
+    function handleClearSearch() {
+        setSearchText("");
+        setSubmittedSearch("");
+        setCurrentPage(1);
+    }
+
+    function handlePreviousPage() {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    }
+
+    function handleNextPage() {
+        const totalPages = Math.ceil(totalComics / 100);
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    }
+
+    function toggleFavorite(comic) {
+        const savedData = localStorage.getItem("favorites");
+        let currentFavorites = { favoriteCharacters: [], favoriteComics: [] };
+        if (savedData) {
+            currentFavorites = JSON.parse(savedData);
+        }
+
+        const alreadyFavorite = currentFavorites.favoriteComics.find(
             (fav) => fav.id === comic._id
         );
 
-        if (existingIndex > -1) {
-            currentFavorites.favoriteComics.splice(existingIndex, 1);
+        if (alreadyFavorite) {
+            currentFavorites.favoriteComics = currentFavorites.favoriteComics.filter(
+                (fav) => fav.id !== comic._id
+            );
         } else {
             currentFavorites.favoriteComics.push({
                 id: comic._id,
@@ -84,100 +104,92 @@ const Comics = () => {
         }
 
         localStorage.setItem("favorites", JSON.stringify(currentFavorites));
-        setFavorites(currentFavorites.favoriteComics);
-    };
-
-    const isFavorite = (comicId) => {
-        return favorites.some((fav) => fav.id === comicId);
-    };
-
-    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-
-    if (loading) {
-        return <div className="loading">⏳ Chargement des comics...</div>;
+        setFavoritesList(currentFavorites.favoriteComics);
     }
 
-    if (error) {
-        return <div className="error">❌ {error}</div>;
+    function isComicFavorite(comicId) {
+        const found = favoritesList.find((fav) => fav.id === comicId);
+        return found !== undefined;
+    }
+
+    const totalPages = Math.ceil(totalComics / 100);
+
+    if (isLoading) {
+        return <div className="loading">Chargement des comics...</div>;
+    }
+
+    if (errorMessage) {
+        return <div className="error">{errorMessage}</div>;
     }
 
     return (
         <div className="page">
-            <h1>📖 Comics Marvel</h1>
+            <h1>Comics Marvel</h1>
 
-            {/* Barre de recherche */}
-            <form className="search-container" onSubmit={handleSearch}>
+            <form className="search-container" onSubmit={handleSearchSubmit}>
                 <input
                     type="text"
                     className="search-input"
-                    placeholder="Rechercher un comic (ex: Spider-Man, Avengers)..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Rechercher un comic..."
+                    value={searchText}
+                    onChange={(event) => setSearchText(event.target.value)}
                 />
                 <button type="submit" className="btn btn-primary">
-                    🔍 Rechercher
+                    Rechercher
                 </button>
-                {searchTitle && (
+                {submittedSearch !== "" && (
                     <button
                         type="button"
                         className="btn btn-secondary"
-                        onClick={() => {
-                            setSearchInput("");
-                            setSearchTitle("");
-                            setPage(1);
-                        }}
+                        onClick={handleClearSearch}
                     >
-                        ✕ Effacer
+                        Effacer
                     </button>
                 )}
             </form>
 
-            {/* Info résultats */}
-            <p style={{ marginBottom: "1rem", color: "rgba(255,255,255,0.6)" }}>
-                {totalCount} comic{totalCount > 1 ? "s" : ""} trouvé{totalCount > 1 ? "s" : ""}
-                {searchTitle && ` pour "${searchTitle}"`} • Tri alphabétique
+            <p style={{ marginBottom: "16px", color: "rgba(255,255,255,0.6)" }}>
+                {totalComics} comic(s) trouvé(s)
+                {submittedSearch !== "" && " pour \"" + submittedSearch + "\""}
+                {" - Tri alphabétique"}
             </p>
 
-            {/* Grille de cartes */}
-            {comics.length > 0 ? (
+            {comics.length === 0 ? (
+                <p className="empty-message">Aucun comic trouvé.</p>
+            ) : (
                 <div className="cards-grid">
                     {comics.map((comic) => (
                         <ComicCard
                             key={comic._id}
                             comic={comic}
-                            isFavorite={isFavorite(comic._id)}
+                            isFavorite={isComicFavorite(comic._id)}
                             onToggleFavorite={toggleFavorite}
                         />
                     ))}
                 </div>
-            ) : (
-                <p className="empty-message">Aucun comic trouvé.</p>
             )}
 
-            {/* Pagination */}
             {totalPages > 1 && (
                 <div className="pagination">
                     <button
                         className="btn btn-secondary"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1}
                     >
-                        ◀ Précédent
+                        Précédent
                     </button>
-                    <span>
-                        Page {page} / {totalPages}
-                    </span>
+                    <span>Page {currentPage} / {totalPages}</span>
                     <button
                         className="btn btn-secondary"
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={page === totalPages}
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
                     >
-                        Suivant ▶
+                        Suivant
                     </button>
                 </div>
             )}
         </div>
     );
-};
+}
 
 export default Comics;

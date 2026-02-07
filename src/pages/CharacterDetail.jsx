@@ -3,64 +3,58 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import ComicCard from "../components/ComicCard";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+const API_URL = "http://localhost:3000";
 
-const CharacterDetail = () => {
+function CharacterDetail() {
     const { id } = useParams();
     const [comics, setComics] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [page, setPage] = useState(1);
-    const [totalCount, setTotalCount] = useState(0);
-    const [favorites, setFavorites] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [favoritesList, setFavoritesList] = useState([]);
 
-    const ITEMS_PER_PAGE = 100;
-
-    // Charger les favoris comics
     useEffect(() => {
-        const storedFavorites = localStorage.getItem("favorites");
-        if (storedFavorites) {
-            const parsed = JSON.parse(storedFavorites);
-            setFavorites(parsed.favoriteComics || []);
+        const savedData = localStorage.getItem("favorites");
+        if (savedData) {
+            const parsed = JSON.parse(savedData);
+            setFavoritesList(parsed.favoriteComics || []);
         }
     }, []);
 
-    // Fetch des comics du personnage
     useEffect(() => {
-        const fetchComics = async () => {
-            setLoading(true);
-            setError(null);
+        async function loadComics() {
+            setIsLoading(true);
+            setErrorMessage("");
 
             try {
-                const response = await axios.get(
-                    `${API_BASE_URL}/api/character/${id}/comics?page=${page}`
-                );
+                const url = API_URL + "/api/character/" + id + "/comics";
+                const response = await axios.get(url);
                 setComics(response.data.comics || []);
-                setTotalCount(response.data.comics?.length || 0);
-            } catch (err) {
-                console.error("Erreur fetch comics:", err);
-                setError("Impossible de charger les comics de ce personnage.");
-            } finally {
-                setLoading(false);
+            } catch (error) {
+                console.error(error);
+                setErrorMessage("Erreur lors du chargement des comics.");
             }
-        };
 
-        fetchComics();
-    }, [id, page]);
+            setIsLoading(false);
+        }
 
-    // Toggle favori comic
-    const toggleFavorite = (comic) => {
-        const storedFavorites = localStorage.getItem("favorites");
-        const currentFavorites = storedFavorites
-            ? JSON.parse(storedFavorites)
-            : { favoriteCharacters: [], favoriteComics: [] };
+        loadComics();
+    }, [id]);
 
-        const existingIndex = currentFavorites.favoriteComics.findIndex(
+    function toggleFavorite(comic) {
+        const savedData = localStorage.getItem("favorites");
+        let currentFavorites = { favoriteCharacters: [], favoriteComics: [] };
+        if (savedData) {
+            currentFavorites = JSON.parse(savedData);
+        }
+
+        const alreadyFavorite = currentFavorites.favoriteComics.find(
             (fav) => fav.id === comic._id
         );
 
-        if (existingIndex > -1) {
-            currentFavorites.favoriteComics.splice(existingIndex, 1);
+        if (alreadyFavorite) {
+            currentFavorites.favoriteComics = currentFavorites.favoriteComics.filter(
+                (fav) => fav.id !== comic._id
+            );
         } else {
             currentFavorites.favoriteComics.push({
                 id: comic._id,
@@ -70,78 +64,57 @@ const CharacterDetail = () => {
         }
 
         localStorage.setItem("favorites", JSON.stringify(currentFavorites));
-        setFavorites(currentFavorites.favoriteComics);
-    };
-
-    const isFavorite = (comicId) => {
-        return favorites.some((fav) => fav.id === comicId);
-    };
-
-    const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
-
-    if (loading) {
-        return <div className="loading">⏳ Chargement des comics...</div>;
+        setFavoritesList(currentFavorites.favoriteComics);
     }
 
-    if (error) {
+    function isComicFavorite(comicId) {
+        const found = favoritesList.find((fav) => fav.id === comicId);
+        return found !== undefined;
+    }
+
+    if (isLoading) {
+        return <div className="loading">Chargement des comics...</div>;
+    }
+
+    if (errorMessage) {
         return (
             <div className="page">
-                <Link to="/characters" className="btn btn-secondary" style={{ marginBottom: "1rem", display: "inline-block" }}>
-                    ◀ Retour aux personnages
+                <Link to="/characters" className="btn btn-secondary" style={{ marginBottom: "16px", display: "inline-block" }}>
+                    Retour aux personnages
                 </Link>
-                <div className="error">❌ {error}</div>
+                <div className="error">{errorMessage}</div>
             </div>
         );
     }
 
     return (
         <div className="page">
-            <Link to="/characters" className="btn btn-secondary" style={{ marginBottom: "1.5rem", display: "inline-block" }}>
-                ◀ Retour aux personnages
+            <Link to="/characters" className="btn btn-secondary" style={{ marginBottom: "24px", display: "inline-block" }}>
+                Retour aux personnages
             </Link>
 
-            <h1>📚 Comics du personnage</h1>
+            <h1>Comics du personnage</h1>
 
-            <p style={{ marginBottom: "1rem", color: "rgba(255,255,255,0.6)" }}>
-                {comics.length} comic{comics.length > 1 ? "s" : ""} trouvé{comics.length > 1 ? "s" : ""}
+            <p style={{ marginBottom: "16px", color: "rgba(255,255,255,0.6)" }}>
+                {comics.length} comic(s) trouvé(s)
             </p>
 
-            {comics.length > 0 ? (
+            {comics.length === 0 ? (
+                <p className="empty-message">Aucun comic trouvé pour ce personnage.</p>
+            ) : (
                 <div className="cards-grid">
                     {comics.map((comic) => (
                         <ComicCard
                             key={comic._id}
                             comic={comic}
-                            isFavorite={isFavorite(comic._id)}
+                            isFavorite={isComicFavorite(comic._id)}
                             onToggleFavorite={toggleFavorite}
                         />
                     ))}
                 </div>
-            ) : (
-                <p className="empty-message">Aucun comic trouvé pour ce personnage.</p>
-            )}
-
-            {totalPages > 1 && (
-                <div className="pagination">
-                    <button
-                        className="btn btn-secondary"
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        disabled={page === 1}
-                    >
-                        ◀ Précédent
-                    </button>
-                    <span>Page {page} / {totalPages}</span>
-                    <button
-                        className="btn btn-secondary"
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={page === totalPages}
-                    >
-                        Suivant ▶
-                    </button>
-                </div>
             )}
         </div>
     );
-};
+}
 
 export default CharacterDetail;

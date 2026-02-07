@@ -1,20 +1,19 @@
-const ComicCard = ({ comic, isFavorite, onToggleFavorite }) => {
-    // Construire l'URL de l'image
-    const imageUrl = comic.thumbnail
-        ? `${comic.thumbnail.path}.${comic.thumbnail.extension}`
-        : "https://via.placeholder.com/300x450?text=No+Image";
+function ComicCard({ comic, isFavorite, onToggleFavorite }) {
+    let imageUrl = "https://via.placeholder.com/300x450?text=No+Image";
+    if (comic.thumbnail) {
+        imageUrl = comic.thumbnail.path + "." + comic.thumbnail.extension;
+    }
 
-    const handleFavoriteClick = (e) => {
-        e.stopPropagation();
+    function handleFavoriteClick(event) {
+        event.stopPropagation();
         onToggleFavorite(comic);
-    };
+    }
 
     return (
         <article className="card">
             <button
-                className={`favorite-btn ${isFavorite ? "active" : ""}`}
+                className={isFavorite ? "favorite-btn active" : "favorite-btn"}
                 onClick={handleFavoriteClick}
-                aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
             >
                 {isFavorite ? "★" : "☆"}
             </button>
@@ -22,7 +21,6 @@ const ComicCard = ({ comic, isFavorite, onToggleFavorite }) => {
                 src={imageUrl}
                 alt={comic.title}
                 className="card-image"
-                loading="lazy"
             />
             <div className="card-content">
                 <h3 className="card-title">{comic.title}</h3>
@@ -32,6 +30,6 @@ const ComicCard = ({ comic, isFavorite, onToggleFavorite }) => {
             </div>
         </article>
     );
-};
+}
 
 export default ComicCard;

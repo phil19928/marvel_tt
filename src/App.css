@@ -15,8 +15,8 @@ body {
 /* Page title styles */
 .page h1 {
     color: #fff;
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
+    font-size: 32px;
+    margin-bottom: 24px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -27,20 +27,20 @@ body {
 /* Search bar styles */
 .search-container {
     display: flex;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    gap: 12px;
+    margin-bottom: 24px;
     flex-wrap: wrap;
 }
 
 .search-input {
     flex: 1;
     min-width: 200px;
-    padding: 0.75rem 1rem;
+    padding: 12px 16px;
     border: 2px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.05);
     color: white;
-    font-size: 1rem;
+    font-size: 16px;
     transition: all 0.3s ease;
 }
 
@@ -56,7 +56,7 @@ body {
 
 /* Button styles */
 .btn {
-    padding: 0.75rem 1.5rem;
+    padding: 12px 24px;
     border: none;
     border-radius: 10px;
     font-weight: 600;
@@ -94,8 +94,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
-    margin-top: 2rem;
+    gap: 16px;
+    margin-top: 32px;
 }
 
 .pagination span {
@@ -107,7 +107,7 @@ body {
 .cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1.5rem;
+    gap: 24px;
 }
 
 /* Card styles */
@@ -133,21 +133,21 @@ body {
 }
 
 .card-content {
-    padding: 1rem;
+    padding: 16px;
 }
 
 .card-title {
-    font-size: 1.1rem;
+    font-size: 18px;
     font-weight: 700;
     color: white;
-    margin-bottom: 0.5rem;
+    margin-bottom: 8px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .card-description {
-    font-size: 0.9rem;
+    font-size: 14px;
     color: rgba(255, 255, 255, 0.6);
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -167,7 +167,7 @@ body {
     border: none;
     background: rgba(0, 0, 0, 0.6);
     color: #ffd700;
-    font-size: 1.3rem;
+    font-size: 21px;
     cursor: pointer;
     transition: all 0.3s ease;
     display: flex;
@@ -189,7 +189,7 @@ body {
 .loading,
 .error {
     text-align: center;
-    padding: 3rem;
+    padding: 48px;
 }
 
 .loading {
@@ -202,16 +202,16 @@ body {
 
 /* Sections for favorites page */
 .favorites-section {
-    margin-bottom: 3rem;
+    margin-bottom: 48px;
 }
 
 .favorites-section h2 {
     color: #fff;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+    font-size: 24px;
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .empty-message {

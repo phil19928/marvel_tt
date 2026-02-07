@@ -1,60 +1,66 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Favorites = () => {
+function Favorites() {
     const navigate = useNavigate();
-    const [favorites, setFavorites] = useState({
-        favoriteCharacters: [],
-        favoriteComics: [],
-    });
+    const [favoriteCharacters, setFavoriteCharacters] = useState([]);
+    const [favoriteComics, setFavoriteComics] = useState([]);
 
-    // Charger les favoris depuis localStorage
     useEffect(() => {
-        const storedFavorites = localStorage.getItem("favorites");
-        if (storedFavorites) {
-            setFavorites(JSON.parse(storedFavorites));
+        const savedData = localStorage.getItem("favorites");
+        if (savedData) {
+            const parsed = JSON.parse(savedData);
+            setFavoriteCharacters(parsed.favoriteCharacters || []);
+            setFavoriteComics(parsed.favoriteComics || []);
         }
     }, []);
 
-    // Supprimer un personnage favori
-    const removeCharacter = (id) => {
-        const updated = {
-            ...favorites,
-            favoriteCharacters: favorites.favoriteCharacters.filter(
-                (char) => char.id !== id
-            ),
+    function removeCharacter(characterId) {
+        const newCharacters = favoriteCharacters.filter(
+            (character) => character.id !== characterId
+        );
+        setFavoriteCharacters(newCharacters);
+
+        const dataToSave = {
+            favoriteCharacters: newCharacters,
+            favoriteComics: favoriteComics,
         };
-        setFavorites(updated);
-        localStorage.setItem("favorites", JSON.stringify(updated));
-    };
+        localStorage.setItem("favorites", JSON.stringify(dataToSave));
+    }
 
-    // Supprimer un comic favori
-    const removeComic = (id) => {
-        const updated = {
-            ...favorites,
-            favoriteComics: favorites.favoriteComics.filter((comic) => comic.id !== id),
+    function removeComic(comicId) {
+        const newComics = favoriteComics.filter(
+            (comic) => comic.id !== comicId
+        );
+        setFavoriteComics(newComics);
+
+        const dataToSave = {
+            favoriteCharacters: favoriteCharacters,
+            favoriteComics: newComics,
         };
-        setFavorites(updated);
-        localStorage.setItem("favorites", JSON.stringify(updated));
-    };
+        localStorage.setItem("favorites", JSON.stringify(dataToSave));
+    }
 
-    // Construire l'URL de l'image
-    const getImageUrl = (thumbnail) => {
-        if (!thumbnail) return "https://via.placeholder.com/300x300?text=No+Image";
-        return `${thumbnail.path}.${thumbnail.extension}`;
-    };
+    function getImageUrl(thumbnail) {
+        if (!thumbnail) {
+            return "https://via.placeholder.com/300x300?text=No+Image";
+        }
+        return thumbnail.path + "." + thumbnail.extension;
+    }
 
-    const hasNoFavorites =
-        favorites.favoriteCharacters.length === 0 &&
-        favorites.favoriteComics.length === 0;
+    function goToCharacterDetail(characterId) {
+        navigate("/characters/" + characterId);
+    }
+
+    const hasNoFavorites = favoriteCharacters.length === 0 && favoriteComics.length === 0;
 
     return (
         <div className="page">
-            <h1>⭐ Mes Favoris</h1>
+            <h1>Mes Favoris</h1>
 
             {hasNoFavorites ? (
-                <div style={{ textAlign: "center", padding: "3rem" }}>
-                    <p className="empty-message" style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
+                <div style={{ textAlign: "center", padding: "48px" }}>
+                    <p className="empty-message" style={{ fontSize: "19px", marginBottom: "16px" }}>
                         Vous n'avez aucun favori pour le moment.
                     </p>
                     <p style={{ color: "rgba(255,255,255,0.5)" }}>
@@ -63,24 +69,24 @@ const Favorites = () => {
                 </div>
             ) : (
                 <>
-                    {/* Section Personnages */}
                     <section className="favorites-section">
-                        <h2>🦸 Personnages ({favorites.favoriteCharacters.length})</h2>
-                        {favorites.favoriteCharacters.length > 0 ? (
+                        <h2>Personnages ({favoriteCharacters.length})</h2>
+                        {favoriteCharacters.length === 0 ? (
+                            <p className="empty-message">Aucun personnage favori.</p>
+                        ) : (
                             <div className="cards-grid">
-                                {favorites.favoriteCharacters.map((character) => (
+                                {favoriteCharacters.map((character) => (
                                     <article
                                         key={character.id}
                                         className="card"
-                                        onClick={() => navigate(`/characters/${character.id}`)}
+                                        onClick={() => goToCharacterDetail(character.id)}
                                     >
                                         <button
                                             className="favorite-btn active"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
+                                            onClick={(event) => {
+                                                event.stopPropagation();
                                                 removeCharacter(character.id);
                                             }}
-                                            aria-label="Retirer des favoris"
                                         >
                                             ✕
                                         </button>
@@ -88,7 +94,6 @@ const Favorites = () => {
                                             src={getImageUrl(character.thumbnail)}
                                             alt={character.name}
                                             className="card-image"
-                                            loading="lazy"
                                         />
                                         <div className="card-content">
                                             <h3 className="card-title">{character.name}</h3>
@@ -96,25 +101,23 @@ const Favorites = () => {
                                     </article>
                                 ))}
                             </div>
-                        ) : (
-                            <p className="empty-message">Aucun personnage favori.</p>
                         )}
                     </section>
 
-                    {/* Section Comics */}
                     <section className="favorites-section">
-                        <h2>📖 Comics ({favorites.favoriteComics.length})</h2>
-                        {favorites.favoriteComics.length > 0 ? (
+                        <h2>Comics ({favoriteComics.length})</h2>
+                        {favoriteComics.length === 0 ? (
+                            <p className="empty-message">Aucun comic favori.</p>
+                        ) : (
                             <div className="cards-grid">
-                                {favorites.favoriteComics.map((comic) => (
+                                {favoriteComics.map((comic) => (
                                     <article key={comic.id} className="card">
                                         <button
                                             className="favorite-btn active"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
+                                            onClick={(event) => {
+                                                event.stopPropagation();
                                                 removeComic(comic.id);
                                             }}
-                                            aria-label="Retirer des favoris"
                                         >
                                             ✕
                                         </button>
@@ -122,7 +125,6 @@ const Favorites = () => {
                                             src={getImageUrl(comic.thumbnail)}
                                             alt={comic.title}
                                             className="card-image"
-                                            loading="lazy"
                                         />
                                         <div className="card-content">
                                             <h3 className="card-title">{comic.title}</h3>
@@ -130,14 +132,12 @@ const Favorites = () => {
                                     </article>
                                 ))}
                             </div>
-                        ) : (
-                            <p className="empty-message">Aucun comic favori.</p>
                         )}
                     </section>
                 </>
             )}
         </div>
     );
-};
+}
 
 export default Favorites;

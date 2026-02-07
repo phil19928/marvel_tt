@@ -1,6 +1,6 @@
 .header {
     background: linear-gradient(135deg, #e62429, #c21721);
-    padding: 1rem 2rem;
+    padding: 16px 32px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -11,7 +11,7 @@
 }
 
 .logo {
-    font-size: 2.5rem;
+    font-size: 40px;
     font-weight: 900;
     color: white;
     text-decoration: none;
@@ -26,15 +26,15 @@
 
 .nav {
     display: flex;
-    gap: 1.5rem;
+    gap: 24px;
 }
 
 .nav-link {
     color: rgba(255, 255, 255, 0.85);
     text-decoration: none;
     font-weight: 600;
-    font-size: 1.1rem;
-    padding: 0.5rem 1rem;
+    font-size: 17.6px;
+    padding: 8px 16px;
     border-radius: 8px;
     transition: all 0.3s ease;
 }
