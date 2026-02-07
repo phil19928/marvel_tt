@@ -6,187 +6,131 @@ import API_URL from "../config";
 function Comics() {
     const [comics, setComics] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [errorMessage, setErrorMessage] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
+    const [page, setPage] = useState(1);
     const [searchText, setSearchText] = useState("");
-    const [submittedSearch, setSubmittedSearch] = useState("");
-    const [totalComics, setTotalComics] = useState(0);
-    const [favoritesList, setFavoritesList] = useState([]);
+    const [favorites, setFavorites] = useState([]);
 
-    useEffect(() => {
-        const savedData = localStorage.getItem("favorites");
-        if (savedData) {
-            const parsed = JSON.parse(savedData);
-            setFavoritesList(parsed.favoriteComics || []);
+    // 1. Charger les favoris
+    useEffect(function () {
+        const savedFavorites = localStorage.getItem("favorites");
+        if (savedFavorites) {
+            const parsedFavorites = JSON.parse(savedFavorites);
+            setFavorites(parsedFavorites.favoriteComics || []);
         }
     }, []);
 
-    useEffect(() => {
-        async function loadComics() {
+    // 2. Charger les comics
+    useEffect(function () {
+        async function fetchData() {
             setIsLoading(true);
-            setErrorMessage("");
-
             try {
-                let url = API_URL + "/api/comics?page=" + currentPage;
-                if (submittedSearch !== "") {
-                    url = url + "&title=" + submittedSearch;
+                let url = API_URL + "/api/comics?page=" + page;
+                if (searchText) {
+                    url = url + "&title=" + searchText;
                 }
 
                 const response = await axios.get(url);
-                const comicsData = response.data.results || [];
-
-                const sortedComics = comicsData.sort(function (a, b) {
-                    const titleA = a.title || "";
-                    const titleB = b.title || "";
-                    return titleA.localeCompare(titleB);
+                // On trie les comics par titre (A-Z)
+                const sortedComics = response.data.results.sort(function (a, b) {
+                    return a.title.localeCompare(b.title);
                 });
 
                 setComics(sortedComics);
-                setTotalComics(response.data.count || 0);
             } catch (error) {
-                console.error(error);
-                setErrorMessage("Erreur lors du chargement des comics.");
+                console.log("Erreur:", error);
             }
-
             setIsLoading(false);
         }
+        fetchData();
+    }, [page, searchText]);
 
-        loadComics();
-    }, [currentPage, submittedSearch]);
-
-    function handleSearchSubmit(event) {
-        event.preventDefault();
-        setSubmittedSearch(searchText);
-        setCurrentPage(1);
-    }
-
-    function handleClearSearch() {
-        setSearchText("");
-        setSubmittedSearch("");
-        setCurrentPage(1);
-    }
-
-    function handlePreviousPage() {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
-    }
-
-    function handleNextPage() {
-        const totalPages = Math.ceil(totalComics / 100);
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
-        }
+    function handleSearch(event) {
+        setSearchText(event.target.value);
+        setPage(1);
     }
 
     function toggleFavorite(comic) {
-        const savedData = localStorage.getItem("favorites");
-        let currentFavorites = { favoriteCharacters: [], favoriteComics: [] };
-        if (savedData) {
-            currentFavorites = JSON.parse(savedData);
-        }
+        const newFavorites = [...favorites];
 
-        const alreadyFavorite = currentFavorites.favoriteComics.find(
-            (fav) => fav.id === comic._id
-        );
+        const existingIndex = newFavorites.findIndex(function (fav) {
+            return fav.id === comic._id;
+        });
 
-        if (alreadyFavorite) {
-            currentFavorites.favoriteComics = currentFavorites.favoriteComics.filter(
-                (fav) => fav.id !== comic._id
-            );
+        if (existingIndex !== -1) {
+            newFavorites.splice(existingIndex, 1);
         } else {
-            currentFavorites.favoriteComics.push({
+            newFavorites.push({
                 id: comic._id,
                 title: comic.title,
-                thumbnail: comic.thumbnail,
+                thumbnail: comic.thumbnail
             });
         }
 
-        localStorage.setItem("favorites", JSON.stringify(currentFavorites));
-        setFavoritesList(currentFavorites.favoriteComics);
+        setFavorites(newFavorites);
+
+        // Sauvegarde
+        const savedData = localStorage.getItem("favorites");
+        let allFavorites = { favoriteCharacters: [], favoriteComics: [] };
+        if (savedData) {
+            allFavorites = JSON.parse(savedData);
+        }
+        allFavorites.favoriteComics = newFavorites;
+        localStorage.setItem("favorites", JSON.stringify(allFavorites));
     }
 
-    function isComicFavorite(comicId) {
-        const found = favoritesList.find((fav) => fav.id === comicId);
-        return found !== undefined;
+    function isFavorite(comicId) {
+        return favorites.some(function (fav) {
+            return fav.id === comicId;
+        });
     }
-
-    const totalPages = Math.ceil(totalComics / 100);
 
     if (isLoading) {
-        return <div className="loading">Chargement des comics...</div>;
-    }
-
-    if (errorMessage) {
-        return <div className="error">{errorMessage}</div>;
+        return <div className="loading">Chargement...</div>;
     }
 
     return (
         <div className="page">
             <h1>Comics Marvel</h1>
 
-            <form className="search-container" onSubmit={handleSearchSubmit}>
+            <div className="search-container">
                 <input
                     type="text"
-                    className="search-input"
                     placeholder="Rechercher un comic..."
+                    className="search-input"
                     value={searchText}
-                    onChange={(event) => setSearchText(event.target.value)}
+                    onChange={handleSearch}
                 />
-                <button type="submit" className="btn btn-primary">
-                    Rechercher
-                </button>
-                {submittedSearch !== "" && (
-                    <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={handleClearSearch}
-                    >
-                        Effacer
-                    </button>
-                )}
-            </form>
+            </div>
 
-            <p style={{ marginBottom: "16px", color: "rgba(255,255,255,0.6)" }}>
-                {totalComics} comic(s) trouvé(s)
-                {submittedSearch !== "" && " pour \"" + submittedSearch + "\""}
-                {" - Tri alphabétique"}
-            </p>
-
-            {comics.length === 0 ? (
-                <p className="empty-message">Aucun comic trouvé.</p>
-            ) : (
-                <div className="cards-grid">
-                    {comics.map((comic) => (
+            <div className="cards-grid">
+                {comics.map(function (comic) {
+                    return (
                         <ComicCard
                             key={comic._id}
                             comic={comic}
-                            isFavorite={isComicFavorite(comic._id)}
+                            isFavorite={isFavorite(comic._id)}
                             onToggleFavorite={toggleFavorite}
                         />
-                    ))}
-                </div>
-            )}
+                    );
+                })}
+            </div>
 
-            {totalPages > 1 && (
-                <div className="pagination">
-                    <button
-                        className="btn btn-secondary"
-                        onClick={handlePreviousPage}
-                        disabled={currentPage === 1}
-                    >
-                        Précédent
-                    </button>
-                    <span>Page {currentPage} / {totalPages}</span>
-                    <button
-                        className="btn btn-secondary"
-                        onClick={handleNextPage}
-                        disabled={currentPage === totalPages}
-                    >
-                        Suivant
-                    </button>
-                </div>
-            )}
+            <div className="pagination">
+                <button
+                    className="btn btn-secondary"
+                    disabled={page === 1}
+                    onClick={function () { setPage(page - 1); }}
+                >
+                    Précédent
+                </button>
+                <span>Page {page}</span>
+                <button
+                    className="btn btn-secondary"
+                    onClick={function () { setPage(page + 1); }}
+                >
+                    Suivant
+                </button>
+            </div>
         </div>
     );
 }

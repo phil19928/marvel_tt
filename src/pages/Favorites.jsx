@@ -1,141 +1,115 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 function Favorites() {
-    const navigate = useNavigate();
-    const [favoriteCharacters, setFavoriteCharacters] = useState([]);
-    const [favoriteComics, setFavoriteComics] = useState([]);
+    const [characterFavorites, setCharacterFavorites] = useState([]);
+    const [comicFavorites, setComicFavorites] = useState([]);
 
-    useEffect(() => {
-        const savedData = localStorage.getItem("favorites");
-        if (savedData) {
-            const parsed = JSON.parse(savedData);
-            setFavoriteCharacters(parsed.favoriteCharacters || []);
-            setFavoriteComics(parsed.favoriteComics || []);
+    useEffect(function () {
+        const savedFavorites = localStorage.getItem("favorites");
+        if (savedFavorites) {
+            const parsedFavorites = JSON.parse(savedFavorites);
+            setCharacterFavorites(parsedFavorites.favoriteCharacters || []);
+            setComicFavorites(parsedFavorites.favoriteComics || []);
         }
     }, []);
 
-    function removeCharacter(characterId) {
-        const newCharacters = favoriteCharacters.filter(
-            (character) => character.id !== characterId
-        );
-        setFavoriteCharacters(newCharacters);
+    function removeCharacter(id) {
+        const newHelper = characterFavorites.filter(function (item) {
+            return item.id !== id;
+        });
+        setCharacterFavorites(newHelper);
 
-        const dataToSave = {
-            favoriteCharacters: newCharacters,
-            favoriteComics: favoriteComics,
-        };
-        localStorage.setItem("favorites", JSON.stringify(dataToSave));
+        // Mise à jour localStorage
+        const savedData = localStorage.getItem("favorites");
+        let allFavorites = JSON.parse(savedData);
+        allFavorites.favoriteCharacters = newHelper;
+        localStorage.setItem("favorites", JSON.stringify(allFavorites));
     }
 
-    function removeComic(comicId) {
-        const newComics = favoriteComics.filter(
-            (comic) => comic.id !== comicId
-        );
-        setFavoriteComics(newComics);
+    function removeComic(id) {
+        const newHelper = comicFavorites.filter(function (item) {
+            return item.id !== id;
+        });
+        setComicFavorites(newHelper);
 
-        const dataToSave = {
-            favoriteCharacters: favoriteCharacters,
-            favoriteComics: newComics,
-        };
-        localStorage.setItem("favorites", JSON.stringify(dataToSave));
+        // Mise à jour localStorage
+        const savedData = localStorage.getItem("favorites");
+        let allFavorites = JSON.parse(savedData);
+        allFavorites.favoriteComics = newHelper;
+        localStorage.setItem("favorites", JSON.stringify(allFavorites));
     }
 
     function getImageUrl(thumbnail) {
-        if (!thumbnail) {
+        if (thumbnail) {
+            return thumbnail.path + "." + thumbnail.extension;
+        } else {
             return "https://via.placeholder.com/300x300?text=No+Image";
         }
-        return thumbnail.path + "." + thumbnail.extension;
     }
-
-    function goToCharacterDetail(characterId) {
-        navigate("/characters/" + characterId);
-    }
-
-    const hasNoFavorites = favoriteCharacters.length === 0 && favoriteComics.length === 0;
 
     return (
         <div className="page">
             <h1>Mes Favoris</h1>
 
-            {hasNoFavorites ? (
-                <div style={{ textAlign: "center", padding: "48px" }}>
-                    <p className="empty-message" style={{ fontSize: "19px", marginBottom: "16px" }}>
-                        Vous n'avez aucun favori pour le moment.
-                    </p>
-                    <p style={{ color: "rgba(255,255,255,0.5)" }}>
-                        Ajoutez des personnages ou comics en cliquant sur ☆
-                    </p>
-                </div>
-            ) : (
-                <>
-                    <section className="favorites-section">
-                        <h2>Personnages ({favoriteCharacters.length})</h2>
-                        {favoriteCharacters.length === 0 ? (
-                            <p className="empty-message">Aucun personnage favori.</p>
-                        ) : (
-                            <div className="cards-grid">
-                                {favoriteCharacters.map((character) => (
-                                    <article
-                                        key={character.id}
-                                        className="card"
-                                        onClick={() => goToCharacterDetail(character.id)}
+            <section className="favorites-section">
+                <h2>Personnages</h2>
+                {characterFavorites.length === 0 ? (
+                    <p>Aucun personnage favori.</p>
+                ) : (
+                    <div className="cards-grid">
+                        {characterFavorites.map(function (character) {
+                            return (
+                                <article key={character.id} className="card">
+                                    <button
+                                        className="favorite-btn active"
+                                        onClick={function () { removeCharacter(character.id); }}
                                     >
-                                        <button
-                                            className="favorite-btn active"
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                removeCharacter(character.id);
-                                            }}
-                                        >
-                                            ✕
-                                        </button>
-                                        <img
-                                            src={getImageUrl(character.thumbnail)}
-                                            alt={character.name}
-                                            className="card-image"
-                                        />
-                                        <div className="card-content">
-                                            <h3 className="card-title">{character.name}</h3>
-                                        </div>
-                                    </article>
-                                ))}
-                            </div>
-                        )}
-                    </section>
+                                        ✕
+                                    </button>
+                                    <img
+                                        src={getImageUrl(character.thumbnail)}
+                                        alt={character.name}
+                                        className="card-image"
+                                    />
+                                    <div className="card-content">
+                                        <h3 className="card-title">{character.name}</h3>
+                                    </div>
+                                </article>
+                            );
+                        })}
+                    </div>
+                )}
+            </section>
 
-                    <section className="favorites-section">
-                        <h2>Comics ({favoriteComics.length})</h2>
-                        {favoriteComics.length === 0 ? (
-                            <p className="empty-message">Aucun comic favori.</p>
-                        ) : (
-                            <div className="cards-grid">
-                                {favoriteComics.map((comic) => (
-                                    <article key={comic.id} className="card">
-                                        <button
-                                            className="favorite-btn active"
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                removeComic(comic.id);
-                                            }}
-                                        >
-                                            ✕
-                                        </button>
-                                        <img
-                                            src={getImageUrl(comic.thumbnail)}
-                                            alt={comic.title}
-                                            className="card-image"
-                                        />
-                                        <div className="card-content">
-                                            <h3 className="card-title">{comic.title}</h3>
-                                        </div>
-                                    </article>
-                                ))}
-                            </div>
-                        )}
-                    </section>
-                </>
-            )}
+            <section className="favorites-section">
+                <h2>Comics</h2>
+                {comicFavorites.length === 0 ? (
+                    <p>Aucun comic favori.</p>
+                ) : (
+                    <div className="cards-grid">
+                        {comicFavorites.map(function (comic) {
+                            return (
+                                <article key={comic.id} className="card">
+                                    <button
+                                        className="favorite-btn active"
+                                        onClick={function () { removeComic(comic.id); }}
+                                    >
+                                        ✕
+                                    </button>
+                                    <img
+                                        src={getImageUrl(comic.thumbnail)}
+                                        alt={comic.title}
+                                        className="card-image"
+                                    />
+                                    <div className="card-content">
+                                        <h3 className="card-title">{comic.title}</h3>
+                                    </div>
+                                </article>
+                            );
+                        })}
+                    </div>
+                )}
+            </section>
         </div>
     );
 }

@@ -3,9 +3,12 @@ import { useNavigate } from "react-router-dom";
 function CharacterCard({ character, isFavorite, onToggleFavorite }) {
     const navigate = useNavigate();
 
-    let imageUrl = "https://via.placeholder.com/300x300?text=No+Image";
-    if (character.thumbnail) {
-        imageUrl = character.thumbnail.path + "." + character.thumbnail.extension;
+    function getImageUrl() {
+        if (character.thumbnail) {
+            return character.thumbnail.path + "." + character.thumbnail.extension;
+        } else {
+            return "https://via.placeholder.com/300x300?text=No+Image";
+        }
     }
 
     function handleCardClick() {
@@ -13,23 +16,31 @@ function CharacterCard({ character, isFavorite, onToggleFavorite }) {
     }
 
     function handleFavoriteClick(event) {
+        // Empêche le clic sur la carte (juste le bouton)
         event.stopPropagation();
         onToggleFavorite(character);
     }
 
+    let favoriteClass = "favorite-btn";
+    let favoriteIcon = "☆";
+
+    if (isFavorite) {
+        favoriteClass = "favorite-btn active";
+        favoriteIcon = "★";
+    }
+
     return (
         <article className="card" onClick={handleCardClick}>
-            <button
-                className={isFavorite ? "favorite-btn active" : "favorite-btn"}
-                onClick={handleFavoriteClick}
-            >
-                {isFavorite ? "★" : "☆"}
+            <button className={favoriteClass} onClick={handleFavoriteClick}>
+                {favoriteIcon}
             </button>
+
             <img
-                src={imageUrl}
+                src={getImageUrl()}
                 alt={character.name}
                 className="card-image"
             />
+
             <div className="card-content">
                 <h3 className="card-title">{character.name}</h3>
                 <p className="card-description">

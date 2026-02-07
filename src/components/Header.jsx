@@ -1,34 +1,34 @@
-import { NavLink } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "./Header.css";
 
-const Header = () => {
+function Header() {
+    const location = useLocation();
+    const currentPath = location.pathname;
+
+    function getLinkClass(path) {
+        if (currentPath === path) {
+            return "nav-link active";
+        } else {
+            return "nav-link";
+        }
+    }
+
     return (
         <header className="header">
-            <NavLink to="/characters" className="logo">
-                MARVEL
-            </NavLink>
+            <Link to="/" className="logo">MARVEL</Link>
             <nav className="nav">
-                <NavLink
-                    to="/characters"
-                    className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-                >
+                <Link to="/characters" className={getLinkClass("/characters")}>
                     Personnages
-                </NavLink>
-                <NavLink
-                    to="/comics"
-                    className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-                >
+                </Link>
+                <Link to="/comics" className={getLinkClass("/comics")}>
                     Comics
-                </NavLink>
-                <NavLink
-                    to="/favorites"
-                    className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-                >
-                    ★ Favoris
-                </NavLink>
+                </Link>
+                <Link to="/favorites" className={getLinkClass("/favorites")}>
+                    Favoris
+                </Link>
             </nav>
         </header>
     );
-};
+}
 
 export default Header;

@@ -11,7 +11,6 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
-          {/* Redirige la racine vers /characters */}
           <Route index element={<Navigate to="/characters" replace />} />
           <Route path="characters" element={<Characters />} />
           <Route path="characters/:id" element={<CharacterDetail />} />

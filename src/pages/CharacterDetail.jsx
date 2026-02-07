@@ -5,111 +5,100 @@ import ComicCard from "../components/ComicCard";
 import API_URL from "../config";
 
 function CharacterDetail() {
-    const { id } = useParams();
+    const params = useParams(); // Récupère l'ID depuis l'URL
+    const characterId = params.id;
+
     const [comics, setComics] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [errorMessage, setErrorMessage] = useState("");
-    const [favoritesList, setFavoritesList] = useState([]);
+    const [favorites, setFavorites] = useState([]);
 
-    useEffect(() => {
-        const savedData = localStorage.getItem("favorites");
-        if (savedData) {
-            const parsed = JSON.parse(savedData);
-            setFavoritesList(parsed.favoriteComics || []);
+    // 1. Charger les favoris
+    useEffect(function () {
+        const savedFavorites = localStorage.getItem("favorites");
+        if (savedFavorites) {
+            const parsedFavorites = JSON.parse(savedFavorites);
+            setFavorites(parsedFavorites.favoriteComics || []);
         }
     }, []);
 
-    useEffect(() => {
-        async function loadComics() {
+    // 2. Charger les comics du personnage
+    useEffect(function () {
+        async function fetchData() {
             setIsLoading(true);
-            setErrorMessage("");
-
             try {
-                const url = API_URL + "/api/character/" + id + "/comics";
+                const url = API_URL + "/api/character/" + characterId + "/comics";
                 const response = await axios.get(url);
-                setComics(response.data.comics || []);
+                setComics(response.data.comics);
             } catch (error) {
-                console.error(error);
-                setErrorMessage("Erreur lors du chargement des comics.");
+                console.log("Erreur:", error);
             }
-
             setIsLoading(false);
         }
+        fetchData();
+    }, [characterId]);
 
-        loadComics();
-    }, [id]);
-
+    // Fonction pour gérer les favoris
     function toggleFavorite(comic) {
-        const savedData = localStorage.getItem("favorites");
-        let currentFavorites = { favoriteCharacters: [], favoriteComics: [] };
-        if (savedData) {
-            currentFavorites = JSON.parse(savedData);
-        }
+        const newFavorites = [...favorites];
 
-        const alreadyFavorite = currentFavorites.favoriteComics.find(
-            (fav) => fav.id === comic._id
-        );
+        const existingIndex = newFavorites.findIndex(function (fav) {
+            return fav.id === comic._id;
+        });
 
-        if (alreadyFavorite) {
-            currentFavorites.favoriteComics = currentFavorites.favoriteComics.filter(
-                (fav) => fav.id !== comic._id
-            );
+        if (existingIndex !== -1) {
+            newFavorites.splice(existingIndex, 1);
         } else {
-            currentFavorites.favoriteComics.push({
+            newFavorites.push({
                 id: comic._id,
                 title: comic.title,
-                thumbnail: comic.thumbnail,
+                thumbnail: comic.thumbnail
             });
         }
 
-        localStorage.setItem("favorites", JSON.stringify(currentFavorites));
-        setFavoritesList(currentFavorites.favoriteComics);
+        setFavorites(newFavorites);
+
+        // Sauvegarde localStorage
+        const savedData = localStorage.getItem("favorites");
+        let allFavorites = { favoriteCharacters: [], favoriteComics: [] };
+        if (savedData) {
+            allFavorites = JSON.parse(savedData);
+        }
+        allFavorites.favoriteComics = newFavorites;
+        localStorage.setItem("favorites", JSON.stringify(allFavorites));
     }
 
-    function isComicFavorite(comicId) {
-        const found = favoritesList.find((fav) => fav.id === comicId);
-        return found !== undefined;
+    function isFavorite(comicId) {
+        return favorites.some(function (fav) {
+            return fav.id === comicId;
+        });
     }
 
     if (isLoading) {
-        return <div className="loading">Chargement des comics...</div>;
-    }
-
-    if (errorMessage) {
-        return (
-            <div className="page">
-                <Link to="/characters" className="btn btn-secondary" style={{ marginBottom: "16px", display: "inline-block" }}>
-                    Retour aux personnages
-                </Link>
-                <div className="error">{errorMessage}</div>
-            </div>
-        );
+        return <div className="loading">Chargement...</div>;
     }
 
     return (
         <div className="page">
-            <Link to="/characters" className="btn btn-secondary" style={{ marginBottom: "24px", display: "inline-block" }}>
-                Retour aux personnages
+            <Link to="/characters" className="btn btn-secondary" style={{ marginBottom: "20px", display: "inline-block" }}>
+                ← Retour aux personnages
             </Link>
 
-            <h1>Comics du personnage</h1>
-
-            <p style={{ marginBottom: "16px", color: "rgba(255,255,255,0.6)" }}>
-                {comics.length} comic(s) trouvé(s)
-            </p>
+            <h1>Comics liés au personnage</h1>
 
             {comics.length === 0 ? (
-                <p className="empty-message">Aucun comic trouvé pour ce personnage.</p>
+                <p>Aucun comic trouvé pour ce personnage.</p>
             ) : (
                 <div className="cards-grid">
-                    {comics.map((comic) => (
-                        <ComicCard
-                            key={comic._id}
-                            comic={comic}
-                            isFavorite={isComicFavorite(comic._id)}
-                            onToggleFavorite={toggleFavorite}
-                        />
-                    ))}
+                    {comics.map(function (comic) {
+                        return (
+                            <ComicCard
+                                key={comic._id}
+                                comic={comic}
+                                isFavorite={isFavorite(comic._id)}
+                                onToggleFavorite={toggleFavorite}
+                            />
+                        );
+                    })}
                 </div>
             )}
         </div>

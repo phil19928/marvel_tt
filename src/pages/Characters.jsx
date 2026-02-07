@@ -6,178 +6,137 @@ import API_URL from "../config";
 function Characters() {
     const [characters, setCharacters] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [errorMessage, setErrorMessage] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
+    const [page, setPage] = useState(1);
     const [searchText, setSearchText] = useState("");
-    const [submittedSearch, setSubmittedSearch] = useState("");
-    const [totalCharacters, setTotalCharacters] = useState(0);
-    const [favoritesList, setFavoritesList] = useState([]);
+    const [favorites, setFavorites] = useState([]);
 
-    useEffect(() => {
-        const savedData = localStorage.getItem("favorites");
-        if (savedData) {
-            const parsed = JSON.parse(savedData);
-            setFavoritesList(parsed.favoriteCharacters || []);
+    // 1. Charger les favoris au démarrage
+    useEffect(function () {
+        const savedFavorites = localStorage.getItem("favorites");
+        if (savedFavorites) {
+            const parsedFavorites = JSON.parse(savedFavorites);
+            // On récupère juste le tableau de personnages
+            setFavorites(parsedFavorites.favoriteCharacters || []);
         }
     }, []);
 
-    useEffect(() => {
-        async function loadCharacters() {
+    // 2. Charger les personnages depuis l'API
+    useEffect(function () {
+        async function fetchData() {
             setIsLoading(true);
-            setErrorMessage("");
-
             try {
-                let url = API_URL + "/api/characters?page=" + currentPage;
-                if (submittedSearch !== "") {
-                    url = url + "&name=" + submittedSearch;
+                // Construction de l'URL
+                let url = API_URL + "/api/characters?page=" + page;
+                if (searchText) {
+                    url = url + "&name=" + searchText;
                 }
 
                 const response = await axios.get(url);
-                setCharacters(response.data.results || []);
-                setTotalCharacters(response.data.count || 0);
+                setCharacters(response.data.results);
             } catch (error) {
-                console.error(error);
-                setErrorMessage("Erreur lors du chargement des personnages.");
+                console.log("Erreur:", error);
             }
-
             setIsLoading(false);
         }
 
-        loadCharacters();
-    }, [currentPage, submittedSearch]);
+        fetchData();
+    }, [page, searchText]);
 
-    function handleSearchSubmit(event) {
-        event.preventDefault();
-        setSubmittedSearch(searchText);
-        setCurrentPage(1);
+    // Fonction pour gérer la recherche
+    function handleSearch(event) {
+        setSearchText(event.target.value);
+        setPage(1); // Revenir à la première page
     }
 
-    function handleClearSearch() {
-        setSearchText("");
-        setSubmittedSearch("");
-        setCurrentPage(1);
-    }
-
-    function handlePreviousPage() {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
-        }
-    }
-
-    function handleNextPage() {
-        const totalPages = Math.ceil(totalCharacters / 100);
-        if (currentPage < totalPages) {
-            setCurrentPage(currentPage + 1);
-        }
-    }
-
+    // Fonction pour gérer les favoris
     function toggleFavorite(character) {
-        const savedData = localStorage.getItem("favorites");
-        let currentFavorites = { favoriteCharacters: [], favoriteComics: [] };
-        if (savedData) {
-            currentFavorites = JSON.parse(savedData);
-        }
+        // Copie des favoris actuels
+        const newFavorites = [...favorites];
 
-        const alreadyFavorite = currentFavorites.favoriteCharacters.find(
-            (fav) => fav.id === character._id
-        );
+        // Est-ce que le perso est déjà favori ?
+        const existingIndex = newFavorites.findIndex(function (fav) {
+            return fav.id === character._id;
+        });
 
-        if (alreadyFavorite) {
-            currentFavorites.favoriteCharacters = currentFavorites.favoriteCharacters.filter(
-                (fav) => fav.id !== character._id
-            );
+        if (existingIndex !== -1) {
+            // Si oui, on l'enlève
+            newFavorites.splice(existingIndex, 1);
         } else {
-            currentFavorites.favoriteCharacters.push({
+            // Sinon, on l'ajoute
+            newFavorites.push({
                 id: character._id,
                 name: character.name,
-                thumbnail: character.thumbnail,
+                thumbnail: character.thumbnail
             });
         }
 
-        localStorage.setItem("favorites", JSON.stringify(currentFavorites));
-        setFavoritesList(currentFavorites.favoriteCharacters);
+        // Mise à jour de l'état
+        setFavorites(newFavorites);
+
+        // Sauvegarde dans le localStorage (il faut aussi garder les comics !)
+        const savedData = localStorage.getItem("favorites");
+        let allFavorites = { favoriteCharacters: [], favoriteComics: [] };
+        if (savedData) {
+            allFavorites = JSON.parse(savedData);
+        }
+        allFavorites.favoriteCharacters = newFavorites;
+        localStorage.setItem("favorites", JSON.stringify(allFavorites));
     }
 
-    function isCharacterFavorite(characterId) {
-        const found = favoritesList.find((fav) => fav.id === characterId);
-        return found !== undefined;
+    // Vérifie si un perso est favori
+    function isFavorite(characterId) {
+        return favorites.some(function (fav) {
+            return fav.id === characterId;
+        });
     }
-
-    const totalPages = Math.ceil(totalCharacters / 100);
 
     if (isLoading) {
-        return <div className="loading">Chargement des personnages...</div>;
-    }
-
-    if (errorMessage) {
-        return <div className="error">{errorMessage}</div>;
+        return <div className="loading">Chargement...</div>;
     }
 
     return (
         <div className="page">
             <h1>Personnages Marvel</h1>
 
-            <form className="search-container" onSubmit={handleSearchSubmit}>
+            <div className="search-container">
                 <input
                     type="text"
-                    className="search-input"
                     placeholder="Rechercher un personnage..."
+                    className="search-input"
                     value={searchText}
-                    onChange={(event) => setSearchText(event.target.value)}
+                    onChange={handleSearch}
                 />
-                <button type="submit" className="btn btn-primary">
-                    Rechercher
-                </button>
-                {submittedSearch !== "" && (
-                    <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={handleClearSearch}
-                    >
-                        Effacer
-                    </button>
-                )}
-            </form>
+            </div>
 
-            <p style={{ marginBottom: "16px", color: "rgba(255,255,255,0.6)" }}>
-                {totalCharacters} personnage(s) trouvé(s)
-                {submittedSearch !== "" && " pour \"" + submittedSearch + "\""}
-            </p>
-
-            {characters.length === 0 ? (
-                <p className="empty-message">Aucun personnage trouvé.</p>
-            ) : (
-                <div className="cards-grid">
-                    {characters.map((character) => (
+            <div className="cards-grid">
+                {characters.map(function (character) {
+                    return (
                         <CharacterCard
                             key={character._id}
                             character={character}
-                            isFavorite={isCharacterFavorite(character._id)}
+                            isFavorite={isFavorite(character._id)}
                             onToggleFavorite={toggleFavorite}
                         />
-                    ))}
-                </div>
-            )}
+                    );
+                })}
+            </div>
 
-            {totalPages > 1 && (
-                <div className="pagination">
-                    <button
-                        className="btn btn-secondary"
-                        onClick={handlePreviousPage}
-                        disabled={currentPage === 1}
-                    >
-                        Précédent
-                    </button>
-                    <span>Page {currentPage} / {totalPages}</span>
-                    <button
-                        className="btn btn-secondary"
-                        onClick={handleNextPage}
-                        disabled={currentPage === totalPages}
-                    >
-                        Suivant
-                    </button>
-                </div>
-            )}
+            <div className="pagination">
+                <button
+                    className="btn btn-secondary"
+                    disabled={page === 1}
+                    onClick={function () { setPage(page - 1); }}
+                >
+                    Précédent
+                </button>
+                <span>Page {page}</span>
+                <button
+                    className="btn btn-secondary"
+                    onClick={function () { setPage(page + 1); }}
+                >
+                    Suivant
+                </button>
+            </div>
         </div>
     );
 }
