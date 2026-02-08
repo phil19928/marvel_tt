@@ -7,10 +7,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Clé API Marvel
 const API_KEY = process.env.MARVEL_API_KEY;
 
-// Route 1: Les personnages
 app.get("/api/characters", async function (req, res) {
     try {
         const name = req.query.name || "";
@@ -36,7 +34,6 @@ app.get("/api/characters", async function (req, res) {
     }
 });
 
-// Route 2: Les comics d'un personnage
 app.get("/api/character/:id/comics", async function (req, res) {
     try {
         const id = req.params.id;
@@ -53,7 +50,6 @@ app.get("/api/character/:id/comics", async function (req, res) {
     }
 });
 
-// Route 3: Tous les comics
 app.get("/api/comics", async function (req, res) {
     try {
         const title = req.query.title || "";

@@ -5,14 +5,13 @@ import ComicCard from "../components/ComicCard";
 import API_URL from "../config";
 
 function CharacterDetail() {
-    const params = useParams(); // Récupère l'ID depuis l'URL
+    const params = useParams();
     const characterId = params.id;
 
     const [comics, setComics] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [favorites, setFavorites] = useState([]);
 
-    // 1. Charger les favoris
     useEffect(function () {
         const savedFavorites = localStorage.getItem("favorites");
         if (savedFavorites) {
@@ -21,7 +20,6 @@ function CharacterDetail() {
         }
     }, []);
 
-    // 2. Charger les comics du personnage
     useEffect(function () {
         async function fetchData() {
             setIsLoading(true);
@@ -34,10 +32,10 @@ function CharacterDetail() {
             }
             setIsLoading(false);
         }
+
         fetchData();
     }, [characterId]);
 
-    // Fonction pour gérer les favoris
     function toggleFavorite(comic) {
         const newFavorites = [...favorites];
 
@@ -57,12 +55,13 @@ function CharacterDetail() {
 
         setFavorites(newFavorites);
 
-        // Sauvegarde localStorage
         const savedData = localStorage.getItem("favorites");
         let allFavorites = { favoriteCharacters: [], favoriteComics: [] };
+
         if (savedData) {
             allFavorites = JSON.parse(savedData);
         }
+
         allFavorites.favoriteComics = newFavorites;
         localStorage.setItem("favorites", JSON.stringify(allFavorites));
     }
@@ -79,7 +78,7 @@ function CharacterDetail() {
 
     return (
         <div className="page">
-            <Link to="/characters" className="btn btn-secondary" style={{ marginBottom: "20px", display: "inline-block" }}>
+            <Link to="/characters" style={{ textDecoration: "none", color: "black", fontWeight: "bold", display: "inline-block", marginBottom: "20px" }}>
                 ← Retour aux personnages
             </Link>
 

@@ -1,50 +1,41 @@
 .header {
-    background: linear-gradient(135deg, #e62429, #c21721);
-    padding: 16px 32px;
+    background-color: #ce2429;
+    padding: 20px;
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    align-items: center;
+    border-bottom: 2px solid black;
 }
 
 .logo {
-    font-size: 40px;
-    font-weight: 900;
+    font-size: 30px;
+    font-weight: bold;
     color: white;
     text-decoration: none;
-    letter-spacing: 4px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    transition: transform 0.3s ease;
-}
-
-.logo:hover {
-    transform: scale(1.05);
 }
 
 .nav {
     display: flex;
-    gap: 24px;
+    gap: 20px;
 }
 
 .nav-link {
-    color: rgba(255, 255, 255, 0.85);
+    color: white;
     text-decoration: none;
-    font-weight: 600;
-    font-size: 17.6px;
-    padding: 8px 16px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    font-size: 18px;
+    padding: 10px;
+    border: 1px solid transparent;
 }
 
 .nav-link:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.15);
+    background-color: white;
+    color: #ce2429;
+    border-radius: 5px;
 }
 
 .nav-link.active {
-    color: white;
-    background: rgba(0, 0, 0, 0.2);
+    background-color: white;
+    color: #ce2429;
+    border-radius: 5px;
+    font-weight: bold;
 }

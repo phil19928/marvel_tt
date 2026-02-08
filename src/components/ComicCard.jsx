@@ -9,7 +9,6 @@ function ComicCard({ comic, isFavorite, onToggleFavorite }) {
     }
 
     function handleFavoriteClick(event) {
-        // Empêche le clic sur la carte si besoin
         event.stopPropagation();
         onToggleFavorite(comic);
     }

@@ -10,7 +10,6 @@ function Comics() {
     const [searchText, setSearchText] = useState("");
     const [favorites, setFavorites] = useState([]);
 
-    // 1. Charger les favoris
     useEffect(function () {
         const savedFavorites = localStorage.getItem("favorites");
         if (savedFavorites) {
@@ -19,7 +18,6 @@ function Comics() {
         }
     }, []);
 
-    // 2. Charger les comics
     useEffect(function () {
         async function fetchData() {
             setIsLoading(true);
@@ -30,8 +28,9 @@ function Comics() {
                 }
 
                 const response = await axios.get(url);
-                // On trie les comics par titre (A-Z)
-                const sortedComics = response.data.results.sort(function (a, b) {
+                const results = response.data.results;
+
+                const sortedComics = results.sort(function (a, b) {
                     return a.title.localeCompare(b.title);
                 });
 
@@ -41,6 +40,7 @@ function Comics() {
             }
             setIsLoading(false);
         }
+
         fetchData();
     }, [page, searchText]);
 
@@ -68,12 +68,13 @@ function Comics() {
 
         setFavorites(newFavorites);
 
-        // Sauvegarde
         const savedData = localStorage.getItem("favorites");
         let allFavorites = { favoriteCharacters: [], favoriteComics: [] };
+
         if (savedData) {
             allFavorites = JSON.parse(savedData);
         }
+
         allFavorites.favoriteComics = newFavorites;
         localStorage.setItem("favorites", JSON.stringify(allFavorites));
     }
@@ -117,7 +118,6 @@ function Comics() {
 
             <div className="pagination">
                 <button
-                    className="btn btn-secondary"
                     disabled={page === 1}
                     onClick={function () { setPage(page - 1); }}
                 >
@@ -125,7 +125,6 @@ function Comics() {
                 </button>
                 <span>Page {page}</span>
                 <button
-                    className="btn btn-secondary"
                     onClick={function () { setPage(page + 1); }}
                 >
                     Suivant

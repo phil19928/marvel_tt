@@ -4,10 +4,10 @@ function CharacterCard({ character, isFavorite, onToggleFavorite }) {
     const navigate = useNavigate();
 
     function getImageUrl() {
-        if (character.thumbnail) {
+        if (character.thumbnail && character.thumbnail.path) {
             return character.thumbnail.path + "." + character.thumbnail.extension;
         } else {
-            return "https://via.placeholder.com/300x300?text=No+Image";
+            return "https://via.placeholder.com/300x300?text=Pas+d'image";
         }
     }
 
@@ -16,7 +16,6 @@ function CharacterCard({ character, isFavorite, onToggleFavorite }) {
     }
 
     function handleFavoriteClick(event) {
-        // Empêche le clic sur la carte (juste le bouton)
         event.stopPropagation();
         onToggleFavorite(character);
     }
@@ -24,7 +23,7 @@ function CharacterCard({ character, isFavorite, onToggleFavorite }) {
     let favoriteClass = "favorite-btn";
     let favoriteIcon = "☆";
 
-    if (isFavorite) {
+    if (isFavorite === true) {
         favoriteClass = "favorite-btn active";
         favoriteIcon = "★";
     }

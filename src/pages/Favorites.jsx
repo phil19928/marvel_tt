@@ -8,6 +8,7 @@ function Favorites() {
         const savedFavorites = localStorage.getItem("favorites");
         if (savedFavorites) {
             const parsedFavorites = JSON.parse(savedFavorites);
+
             setCharacterFavorites(parsedFavorites.favoriteCharacters || []);
             setComicFavorites(parsedFavorites.favoriteComics || []);
         }
@@ -17,12 +18,14 @@ function Favorites() {
         const newHelper = characterFavorites.filter(function (item) {
             return item.id !== id;
         });
+
         setCharacterFavorites(newHelper);
 
-        // Mise à jour localStorage
         const savedData = localStorage.getItem("favorites");
         let allFavorites = JSON.parse(savedData);
+
         allFavorites.favoriteCharacters = newHelper;
+
         localStorage.setItem("favorites", JSON.stringify(allFavorites));
     }
 
@@ -30,20 +33,22 @@ function Favorites() {
         const newHelper = comicFavorites.filter(function (item) {
             return item.id !== id;
         });
+
         setComicFavorites(newHelper);
 
-        // Mise à jour localStorage
         const savedData = localStorage.getItem("favorites");
         let allFavorites = JSON.parse(savedData);
+
         allFavorites.favoriteComics = newHelper;
+
         localStorage.setItem("favorites", JSON.stringify(allFavorites));
     }
 
     function getImageUrl(thumbnail) {
-        if (thumbnail) {
+        if (thumbnail && thumbnail.path) {
             return thumbnail.path + "." + thumbnail.extension;
         } else {
-            return "https://via.placeholder.com/300x300?text=No+Image";
+            return "https://via.placeholder.com/300x300?text=Pas+d'image";
         }
     }
 
@@ -53,6 +58,7 @@ function Favorites() {
 
             <section className="favorites-section">
                 <h2>Personnages</h2>
+
                 {characterFavorites.length === 0 ? (
                     <p>Aucun personnage favori.</p>
                 ) : (
@@ -62,15 +68,19 @@ function Favorites() {
                                 <article key={character.id} className="card">
                                     <button
                                         className="favorite-btn active"
-                                        onClick={function () { removeCharacter(character.id); }}
+                                        onClick={function () {
+                                            removeCharacter(character.id);
+                                        }}
                                     >
                                         ✕
                                     </button>
+
                                     <img
                                         src={getImageUrl(character.thumbnail)}
                                         alt={character.name}
                                         className="card-image"
                                     />
+
                                     <div className="card-content">
                                         <h3 className="card-title">{character.name}</h3>
                                     </div>
@@ -83,6 +93,7 @@ function Favorites() {
 
             <section className="favorites-section">
                 <h2>Comics</h2>
+
                 {comicFavorites.length === 0 ? (
                     <p>Aucun comic favori.</p>
                 ) : (
@@ -92,15 +103,19 @@ function Favorites() {
                                 <article key={comic.id} className="card">
                                     <button
                                         className="favorite-btn active"
-                                        onClick={function () { removeComic(comic.id); }}
+                                        onClick={function () {
+                                            removeComic(comic.id);
+                                        }}
                                     >
                                         ✕
                                     </button>
+
                                     <img
                                         src={getImageUrl(comic.thumbnail)}
                                         alt={comic.title}
                                         className="card-image"
                                     />
+
                                     <div className="card-content">
                                         <h3 className="card-title">{comic.title}</h3>
                                     </div>
